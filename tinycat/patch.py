@@ -1,3 +1,4 @@
+"""영상 패치 크롭 함수를 모은 모듈"""
 from __future__ import division
 
 import numpy as np
