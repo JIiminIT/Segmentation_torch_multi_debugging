@@ -1,8 +1,8 @@
 """tinycat pre-defined utilities"""
-import nibabel as nib
-import tinycat as cat
 import glob
 import os
+import nibabel as nib
+import tinycat as cat
 
 __all__ = [
     "to_nifti",
@@ -86,7 +86,7 @@ def load_sample_mri():
         filepath = "tinycat/"
 
     example_mri_filename = os.path.join(
-        os.path.dirname(filepath), "core/impl/resources/example_mri.nii.gz"
+        os.path.dirname(filepath), "resources/example_mri.nii.gz"
     )
 
     return load(example_mri_filename)
