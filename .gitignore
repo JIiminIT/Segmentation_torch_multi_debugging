@@ -1,0 +1,7 @@
+__pycache__
+*.pyc
+.vscode
+tinycat-env
+tinycat.egg-info
+build
+dist
