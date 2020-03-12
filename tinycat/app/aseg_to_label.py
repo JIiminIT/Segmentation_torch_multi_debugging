@@ -86,7 +86,7 @@ def main():
         "--mode",
         required=False,
         type=str,
-        help="root directory of surfer_result",
+        help="aqua(104 Label brain) or teslab(5 Label brain)",
         default="aqua",
     )
     args = parser.parse_args()
