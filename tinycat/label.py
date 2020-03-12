@@ -1,7 +1,9 @@
 """3d multilabel 영상 처리 알고리즘들을 모아 둔 모듈"""
+# pylint: disable=unsupported-assignment-operation, no-member
 from typing import List, Optional
-from scipy import ndimage
 import numpy as np
+from scipy import ndimage
+from scipy.ndimage.morphology import binary_dilation, binary_closing, binary_fill_holes
 
 
 __all__ = [
@@ -15,6 +17,8 @@ __all__ = [
     "border_cleaning",
     "kernel_correction",
     "np_correction",
+    "n_connections",
+    "PostProcessingLayer",
 ]
 
 
@@ -367,3 +371,302 @@ def np_correction(np_label):
         np.putmask(np_corrected, np.logical_and(region, True), idx)
 
     return np_corrected
+
+
+def n_connections(array: np.array) -> List:
+    """measures how many connected components are included in array
+
+    Args:
+        array (iterable): numpy array or iterable object
+
+    Returns:
+        n_connections (list): n_connections of the input data
+    """
+
+    uniques = np.unique(array)
+
+    if len(uniques) > 1:
+        connections = []
+        for unique in uniques:
+            connections.append(ndimage.label(array == unique)[1])
+    else:
+        connections = ndimage.label(array)[1]
+    return n_connections
+
+
+class PostProcessingLayer(object):
+    """PostProcessingLayer for SegEngine segmentation
+
+    Args:
+        object (class)
+    """
+
+    def __init__(self, mode: str = "9-label"):
+        self.mode = mode
+
+    def run(self, *args, **kwargs):
+        if self.mode == "simplified":
+            return self._sequential_postprocess_simplified(*args, **kwargs)
+        if self.mode == "9-label":
+            return self._sequential_postprocess_v1(*args, **kwargs)
+        if self.mode == "10-label":
+            return self._sequential_postprocess_v1(*args, **kwargs)
+        if self.mode == "9-label+stroke":
+            return self._stroke_postprocess(*args, **kwargs)
+
+    def _stroke_postprocess(
+        self,
+        label: np.array,
+        stroke: np.array,
+        edited: bool = False,
+        layer_gap: int = 2,
+    ) -> np.array:
+        """merges 9-label segmentation result and 
+        ischemic stroke segmentation result
+
+        Args:
+            label (np.ndarray): label array
+            stroke (np.ndarray): stroke array
+            edited (bool): edited label should not be processed dramatically
+            layer_gap (int): number of iterations for in_out_correction to 
+                cover internal tissues with external tissues
+
+        Returns:
+            result (np.ndarray): result array
+
+        Procedure:
+            1. CSF 라벨의 binary closing을 통해 CSF 라벨의 안에 
+            외부 라벨 (Skull, Skin)이 포함되지 않도록 한다. 
+            2. 속을 채운 CSF 라벨의 바깥쪽에 존재하는 Stroke는 모두 제거된다.
+            3. Stroke label 중 가장 큰 덩어리의 5% 이하 크기의 Stroke는 노이즈로 간주하고 모두 없앤다.
+            4. CSF는 Stroke를 감싸도록 Stroke가 빠져나간 부분만큼 dilation된다.
+            5. Skull은 CSF를 감싸도를 CSF가 빠져나간 부분만큼 dilation된다.
+            6. Skin은 Skull을 감싸도를 Skull이 빠져나간 부분만큼 dilation된다.
+        """
+        # extract brain from label
+        brain_label = (label < 6) & (label != 0)
+        brain = label[brain_label]
+
+        # csf has to cover stroke in order to use meshengine
+        csf = (label != 0) & (label < 7)
+
+        # prevent skull or scalp included inside of csf
+        if not edited:
+            csf = binary_closing(csf, iterations=15)
+
+        csf = binary_fill_holes(csf)
+
+        # remove stroke out of csf
+        # assume that stroke does not included in skull and skin location
+        # skull and skin location is redefined while postprocessing using csf's binary closing
+        stroke[csf == 0] = 0
+
+        if not edited:
+            stroke = connected_components_analysis(stroke, theta=0.05)
+
+        # csf should cover stroke
+        stroke = out_in_correction(csf, stroke)
+
+        # if stroke label is empty, return input label
+        if not np.any(stroke):
+            return label
+
+        skull = (label != 0) & (label != 8)
+        csf = out_in_correction(skull, csf)
+
+        skin = label > 0 | skull
+        skull = out_in_correction(skin, skull)
+
+        # csf has to cover the border of brain and stroke
+        csf = in_out_correction(csf, (stroke | brain_label), iterations=layer_gap)
+        # skull has to cover the border of csf
+        skull = in_out_correction(skull, csf, iterations=layer_gap)
+        # skin has to cover the border of skull
+        skin = in_out_correction(skin, skull, iterations=layer_gap)
+
+        # craft labels
+        result = np.zeros_like(label)
+        result[skin > 0] = 8
+        result[skull > 0] = 7
+        result[csf > 0] = 6
+        result[brain_label] = brain
+
+        # finalize label with stroke
+        result[stroke > 0] = 13
+
+        return result
+
+    @staticmethod
+    def _brain_processing(label: np.array, cover_wm: bool = True) -> np.array:
+        """process brain label consists of 5 labels by detach particles
+        and unconnected labels to make standard cerebrum and cerebellum
+
+        Args:
+            label (np.ndarray): label array
+            cover_wm (bool): If specified, try to cover white matter with gray matter
+
+        Returns:
+            brain (np.ndarray): processed brain
+        """
+
+        # Layering order:
+        # Cerebral WM -> Cerebral GM -> Cerebellar WM -> Cerebellar GM -> Ventricles ->
+        cerebral_wm = fill_and_clean_label(label, 2)
+        cerebral_gm = label == 1
+        cerebral_gm = get_largest_label(cerebral_gm)
+        cerebral_gm = cerebral_gm | (cerebral_wm)
+        cerebral_gm = fill_and_clean_label(cerebral_gm, 1)
+
+        cerebellar_wm = fill_and_clean_label(label, 4)
+        cerebellar_gm = label == 3
+        cerebellar_gm = get_largest_label(cerebellar_gm)
+        cerebellar_gm = (cerebellar_gm | (cerebellar_wm)) * 3
+        cerebellar_gm = fill_and_clean_label(cerebellar_gm, 3)
+
+        lateral_ventricles = slicewise_fill_holes(label == 5)
+        lateral_ventricles = (
+            connected_components_analysis(lateral_ventricles, theta=0.3) * 5
+        )
+
+        cerebrum = np.where(cerebral_wm > 0, 2, cerebral_gm)
+
+        if cover_wm:
+            corrected_gm = in_out_correction(cerebrum == 1, cerebrum == 2)
+            dilated_gm = binary_dilation(cerebrum == 1, iterations=3)
+            corrected_gm = dilated_gm & corrected_gm
+            cerebrum[corrected_gm] = 1
+
+        # Assemble Brains include Ventricle, exclude CSF
+        # Recover the disconnection after inserting ventricles
+        cerebrum = np.where(lateral_ventricles > 0, 2, cerebrum)
+        cerebrum = np.where(binary_fill_holes(cerebrum == 2), 2, cerebrum)
+        cerebrum = np.where(lateral_ventricles > 0, 5, cerebrum)
+
+        # Detach isolated cerebrum
+        isolated_cerebrum = get_largest_label(cerebrum > 0) ^ (cerebrum > 0)
+        cerebrum[isolated_cerebrum] = 0
+
+        # Initialize cerebellum
+        cerebellum = np.where(cerebellar_wm > 0, 3, cerebellar_gm)
+        cerebellum = np.where(binary_fill_holes(cerebellum == 3), 3, cerebellum)
+        cerebellum = np.where(cerebellar_wm > 0, 4, cerebellum)
+
+        # Brain -> cerebrum + cerebellum
+        brain = np.where(cerebellum > 0, cerebellum, cerebrum)
+        return brain
+
+    def _sequential_postprocess_v1(
+        self,
+        label: np.array,
+        cover_wm: bool = True,
+        simplify: bool = False,
+        layer_gap: int = 2,
+    ) -> np.array:
+        """Sequential postprocessing of mri segmentation results.
+
+        Args:
+            label (np.ndarray): argmaxed segmentation results in NEUROPHET's protocol
+            cover_wm (bool): If specified, try to cover white matter with gray matter
+            simplify (bool): If specified, simplify label
+            layer_gap (int): number of iterations for in_out_correction to 
+                cover internal tissues with external tissues
+
+        Returns:
+            label: post processed result in  NEUROPHET's protocol.
+        """
+        # Layering Order:
+        # Brain -> CSF -> Skull -> Scalp
+        brain = self._brain_processing(label, cover_wm)
+
+        # Extract CSF covering brain
+        csf = (label != 0) & (label < 7)
+        csf = binary_fill_holes(csf)
+        csf = get_largest_label(csf)
+
+        # Extract Skull covering CSF
+        skull = (label != 0) & (label != 8)
+        skull = get_largest_label(skull)
+        skull = binary_fill_holes(skull)
+        csf = out_in_correction(skull, csf)
+
+        # Skin Process
+        skin = label > 0
+        skin = get_largest_label(skin)
+        skin = binary_fill_holes(skin)
+        skin = binary_closing(skin)
+
+        # remove skin particles
+        skull = out_in_correction(skin, skull)
+
+        # Cover inner region with outter region
+        csf = in_out_correction(csf, brain, iterations=layer_gap)
+        skull = in_out_correction(skull, csf, iterations=layer_gap)
+        skin = in_out_correction(skin, skull, iterations=layer_gap)
+
+        # Start Assembling all Brain, Skull and Skin
+        csf_brain = np.where(brain > 0, brain, csf * 6)
+        skull_brain = np.where(csf_brain > 0, csf_brain, skull * 7)
+        head = np.where(skull_brain > 0, skull_brain, skin * 8)
+
+        # Final argmax-based kernel correction
+        result = kernel_correction(head, sigma=0.05, theta=0.3, filter_size=5)
+
+        # tES LAB 소프트웨어에서 사용하는 고유 라벨 값
+        if simplify:
+            result[result == 1] = 9  # gray matter
+            result[result == 2] = 10  # white matter
+            result[result == 3] = 9
+            result[result == 4] = 10
+            result[result == 5] = 11
+            result[result == 6] = 11  # csf + ventricles
+
+        return result
+
+    def _sequential_postprocess_simplified(
+        self,
+        label: np.array,
+        cover_wm: bool = True,
+        simplify: bool = False,
+        layer_gap: int = 2,
+    ) -> np.array:
+        """Sequential postprocessing of mri segmentation results.
+            with simplified 6-labels (without skull, skin)
+
+        Args:
+            label (np.ndarray): argmaxed segmentation results in NEUROPHET's protocol
+            cover_wm (bool): If specified, try to cover white matter with gray matter
+            simplify (bool): If specified, simplify label
+            layer_gap (int): number of iterations for in_out_correction to
+                cover internal tissues with external tissues
+
+        Returns:
+            label: post processed result in  NEUROPHET's protocol.
+        """
+        # remove skull and skin
+        label[label > 6] = 0
+
+        # Layering Order:
+        # Brain -> CSF -> Skull -> Scalp
+        brain = self._brain_processing(label, cover_wm)
+
+        # Extract CSF covering brain
+        csf = (label != 0) & (label < 7)
+        csf = binary_fill_holes(csf)
+        csf = get_largest_label(csf)
+
+        # Cover inner region with outter region
+        csf = in_out_correction(csf, brain, iterations=layer_gap)
+
+        # Start Assembling all Brain, Skull and Skin
+        csf_brain = np.where(brain > 0, brain, csf * 6)
+
+        # Final argmax-based kernel correction
+        result = kernel_correction(csf_brain, sigma=0.05, theta=0.3, filter_size=5)
+
+        if simplify:
+            result[result == 3] = 1
+            result[result == 4] = 2
+            result[result == 5] = 3
+            result[result == 6] = 3  # csf + ventricles
+
+        return result
