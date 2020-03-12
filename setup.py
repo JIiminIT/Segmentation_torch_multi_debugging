@@ -14,7 +14,6 @@ from setuptools import setup
 REQUIRED_PACKAGES = [
     "numpy", # 1.8.1
     "scipy", # 1.4.1
-    "tensorflow", # 2.1.0
     "matplotlib",
     "nibabel",
     "joblib",
@@ -23,6 +22,12 @@ REQUIRED_PACKAGES = [
     "tqdm",
     "SimpleITK",
 ]
+
+# tensorflow-gpu 패키지가 설치되어 있는 경우 그대로 사용
+try:
+    import tensorflow as _test_
+except ImportError:
+    REQUIRED_PACKAGES.append("tensorflow")
 
 # Retrieve version from about.py
 def get_version():
