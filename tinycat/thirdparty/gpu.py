@@ -33,12 +33,12 @@
 # Implemented for Python3 and Windows
 # iam@nyanye.com
 
+import os
+import time
+import platform
 from subprocess import Popen, PIPE
 from pprint import pprint
-import os
-import platform
 import numpy as np
-import time
 
 
 class GPU:
@@ -72,7 +72,10 @@ class GPU:
         self.display_active = display_active
 
     def describe(self):
-        pprint(self.get_summary())
+        print("-" * 80)
+        for line in self.get_summary():
+            print(line)
+        print("-" * 80)
 
     def get_summary(self):
         summary = [
@@ -494,3 +497,9 @@ def show_utilization(all=False, attr_list=None, use_old_code=False):
             print(header_spacing_string)
             for gpustring in gpustrings:
                 print(gpustring)
+
+
+def describe():
+    """prints quick summary informations about available gpus"""
+    for gpu in get_gpus():
+        gpu.describe()

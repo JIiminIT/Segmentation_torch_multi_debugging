@@ -8,29 +8,26 @@ Tinycat imports and wraps several functions from the nibabel namespace,
 Implements various numpy-based matrix calculation & neuroimaging functional APIs
 """
 
-from __future__ import absolute_import
 from nibabel import Nifti2Image
 
+# 버젼정보 등 import
 from tinycat.about import *
+
+# nifti 로딩 및 관련 함수들은 최상위 이름공간에서 사용할 수 있습니다.
 from tinycat.nifti_utils import *
 
 # pylint: disable=redefined-builtin
 from tinycat import (
     base,
-    elastix,
+    thirdparty,
     eval,
-    freesurfer,
-    gpu,
     label,
     lut,
     multicore,
     nifti,
-    nn,
     normalization,
-    np,
+    metrics,
     patch,
     plot,
     volume,
 )
-
-del absolute_import
