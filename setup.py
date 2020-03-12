@@ -1,3 +1,8 @@
+"""Tinycat 설치 스크립트
+
+run:
+    > python setup.py install
+"""
 # Copyright 2020 Neurophet Inc. All Rights Reserved.
 # Author: Daun Jung (iam@nyanye.com / djjung@neurophet.com)
 import os
@@ -24,10 +29,12 @@ REQUIRED_PACKAGES = [
 ]
 
 # tensorflow-gpu 패키지가 설치되어 있는 경우 그대로 사용
+# pylint: disable=unused-import
 try:
     import tensorflow as _test_
 except ImportError:
     REQUIRED_PACKAGES.append("tensorflow")
+
 
 # Retrieve version from about.py
 def get_version():
