@@ -1,3 +1,4 @@
+"""Image segmentation evaluation 시에 사용되는 함수들의 모듈"""
 import pandas as pd
 import numpy as np
 

@@ -1,4 +1,4 @@
-"""Efficient data structures and lookup tables"""
+"""Efficient data structures and lookup tables for internal products"""
 
 import os
 from tinycat._base import namedtuple_with_defaults as namedtuple
@@ -22,7 +22,7 @@ NameOrientedLut = namedtuple("LookupTable", ["value", "r", "g", "b"])
 
 def _parse_freesurfer_colorlut():
     """Parse freesurfer colorlut from raw textfile
-    
+
     Returns:
         dict: dictionary of lookuptable
     """

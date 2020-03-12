@@ -1,5 +1,6 @@
-from scipy import ndimage
+"""3d multilabel 영상 처리 알고리즘들을 모아 둔 모듈"""
 from typing import List, Optional
+from scipy import ndimage
 import numpy as np
 
 
