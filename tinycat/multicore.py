@@ -1,3 +1,4 @@
+"""multicore processing 관련 함수 모듈 """
 import multiprocessing
 import collections
 from joblib import Parallel, delayed
@@ -7,7 +8,7 @@ __all__ = ["run_parallel"]
 
 
 def run_parallel(task, items, n_jobs=multiprocessing.cpu_count(), check_pickle=True):
-    """Parallelize tasks into multiple jobs with user custom parameters 
+    """Parallelize tasks into multiple jobs with user custom parameters
 
     Usage:
         .. code-block:: python
@@ -23,8 +24,9 @@ def run_parallel(task, items, n_jobs=multiprocessing.cpu_count(), check_pickle=T
     Args:
         task (callable): task to be parallelized
         items (iterable): iterable object to feed as an argument
-        n_jobs (int, optional): Defaults to multiprocessing.cpu_count(). Number of processes to be used
-    
+        n_jobs (int, optional): Defaults to multiprocessing.cpu_count().
+            Number of processes to be used
+
     Returns:
         Returned value of parallel task
     """
