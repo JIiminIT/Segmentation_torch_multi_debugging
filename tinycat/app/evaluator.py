@@ -6,7 +6,7 @@ from datetime import datetime
 from tqdm import tqdm
 import pandas as pd
 import tinycat as cat
-from tinycat.eval import report_metrics
+from tinycat.evaluation import report_metrics
 
 
 class Evaluator(object):

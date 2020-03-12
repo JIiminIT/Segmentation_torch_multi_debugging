@@ -20,7 +20,7 @@ from tinycat.nifti_utils import *
 from tinycat import (
     base,
     thirdparty,
-    eval,
+    evaluation,
     label,
     lut,
     multicore,
