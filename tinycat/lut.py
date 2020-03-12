@@ -1,7 +1,7 @@
 """Efficient data structures and lookup tables"""
 
 import os
-from tinycat.base import namedtuple_with_defaults as namedtuple
+from tinycat._base import namedtuple_with_defaults as namedtuple
 
 __all__ = [
     "ValueOrientedLut",

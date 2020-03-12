@@ -1,26 +1,25 @@
 """Tinycat custom base components"""
 
-from six import string_types
 import collections
+from six import string_types
 
 
 __all__ = [
     "namedtuple_with_defaults",
     "look_up_operations",
     "damerau_levenshtein_distance",
-    "TinycatModuleWarning",
 ]
 
 
 def namedtuple_with_defaults(typename, field_names, default_values=()):
     """Efficient data structures with default attributes and fields
-    
+
     Args:
         typename (str): name of the subclass
         field_names ([type]): name of the fields
         default_values (tuple, optional): Defaults to (). 
             default values for fields
-    
+
     Returns:
         Subclass: subclass with typename and field_names specified
     """
@@ -100,11 +99,3 @@ def damerau_levenshtein_distance(s1, s2):
                 d[(i, j)] = min(d[(i, j)], d[i - 2, j - 2] + cost)  # transposition
 
     return d[string_1_length - 1, string_2_length - 1]
-
-
-class TinycatModuleWarning(UserWarning):
-    """
-    Warning for failed import of package module
-    """
-
-    pass

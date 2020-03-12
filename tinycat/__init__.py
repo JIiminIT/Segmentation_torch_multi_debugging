@@ -18,7 +18,6 @@ from tinycat.nifti_utils import *
 
 # pylint: disable=redefined-builtin
 from tinycat import (
-    base,
     thirdparty,
     evaluation,
     lut,
