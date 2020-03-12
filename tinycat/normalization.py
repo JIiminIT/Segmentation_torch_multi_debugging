@@ -1,7 +1,4 @@
 """자주 사용되는 의료영상 normalization 함수들을 모아 둔 모듈"""
-from __future__ import division
-from __future__ import absolute_import
-
 from scipy import ndimage
 import numpy as np
 import tinycat as cat

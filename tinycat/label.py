@@ -1,6 +1,3 @@
-from __future__ import print_function
-from __future__ import division
-
 from scipy import ndimage
 from typing import List, Optional
 import numpy as np

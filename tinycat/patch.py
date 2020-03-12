@@ -1,6 +1,4 @@
 """영상 패치 크롭 함수를 모은 모듈"""
-from __future__ import division
-
 import numpy as np
 
 
@@ -49,9 +47,11 @@ def crop_foreground_3d(img, edge_only=False):
     bottom_edge = true_points.max(axis=0)
     if edge_only:
         return top_edge, bottom_edge
-    return img[top_edge[0]:bottom_edge[0] + 1,
-               top_edge[1]:bottom_edge[1] + 1,
-               top_edge[2]:bottom_edge[2] + 1]
+    return img[
+        top_edge[0] : bottom_edge[0] + 1,
+        top_edge[1] : bottom_edge[1] + 1,
+        top_edge[2] : bottom_edge[2] + 1,
+    ]
 
 
 def crop_roi_3d(img, length_only=False):
