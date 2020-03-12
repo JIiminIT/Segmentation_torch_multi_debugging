@@ -1,15 +1,20 @@
 # Copyright 2020 Neurophet Inc. All Rights Reserved.
 # Author: Daun Jung (iam@nyanye.com / djjung@neurophet.com)
-from setuptools import find_packages
-from setuptools import setup
 import os
 import io
+from setuptools import find_packages
+from setuptools import setup
 
 
+# 2020-03-12 comment:
+# Aqua Engine 1.3.0 및 SegEngine 2.1.7 버젼에서 배포되고 있는 dependency들의 버젼:
+# numpy==1.16.2
+# nibabel==2.5.0
+# tensorflow-gpu==1.14.0
 REQUIRED_PACKAGES = [
-    "numpy==1.18",
-    "scipy==1.4.1",
-    "tensorflow==2.1.0",
+    "numpy", # 1.8.1
+    "scipy", # 1.4.1
+    "tensorflow", # 2.1.0
     "matplotlib",
     "nibabel",
     "joblib",
