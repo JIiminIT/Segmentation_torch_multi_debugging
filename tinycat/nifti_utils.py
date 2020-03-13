@@ -2,7 +2,6 @@
 import glob
 import os
 import nibabel as nib
-import tinycat as cat
 
 __all__ = [
     "to_nifti",
@@ -25,7 +24,7 @@ class Nifti1Image(nib.Nifti1Image):
             affine = self.affine
         if header is None:
             header = self.header
-        cat.Nifti1Image(dataobj, affine, header).to_filename(filename)
+        nib.Nifti1Image(dataobj, affine, header).to_filename(filename)
 
 
 def load(filename):
