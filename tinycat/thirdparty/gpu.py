@@ -1,3 +1,4 @@
+"""NVIDIA GPU 정보 확인 및 호환성 보완 유틸리티 """
 # GPUtil - GPU utilization
 #
 # A Python module for programmically getting the GPU utilization from NVIDA gpus using nvidia-smi
@@ -37,8 +38,11 @@ import os
 import time
 import platform
 from subprocess import Popen, PIPE
-from pprint import pprint
 import numpy as np
+from tinycat.system import CWD, find_executable
+
+
+CUDA_DLLNAMES = ["nvcuda", "nvapi64", "nvfatbinaryLoader"]
 
 
 class GPU:
@@ -72,6 +76,7 @@ class GPU:
         self.display_active = display_active
 
     def describe(self):
+        """prints out current gpu informations """
         print("-" * 80)
         for line in self.get_summary():
             print(line)
@@ -503,3 +508,30 @@ def describe():
     """prints quick summary informations about available gpus"""
     for gpu in get_gpus():
         gpu.describe()
+
+
+def initialize_nvcuda(logger=None, warning_msg=None, cwd=CWD) -> None:
+    """Initialize graphic driver components according to
+    user operating system and gpu environment
+
+    사용자의 PC에 GPU 및 NVIDIA Driver가 설치되어 있는지 여부에 따라
+    배포된 Tensorflow 기반 Engine의 구성요소가 변경되어야 하기에 필요한 단락
+    """
+    for dllname in CUDA_DLLNAMES:
+        dllpaths = find_executable(f"{dllname}.dll")
+        if not dllpaths:
+            try:
+                # os.rename equivalent function
+                # for cross-platform overwriting of the destination.
+                os.replace(f"{cwd}\\{dllname}_bak.dll", f"{cwd}\\{dllname}.dll")
+            except FileNotFoundError:
+                if logger:
+                    logger.warning(warning_msg)
+
+        else:
+            for dllpath in dllpaths:
+                if "system32" in dllpath:
+                    try:
+                        os.replace(f"{cwd}\\{dllname}.dll", f"{cwd}\\{dllname}_bak.dll")
+                    except FileNotFoundError:
+                        pass
