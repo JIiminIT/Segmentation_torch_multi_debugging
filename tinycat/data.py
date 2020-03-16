@@ -1,6 +1,7 @@
 """Tinycat custom data structures and utilities"""
 
 import collections
+import argparse
 from typing import Mapping, Iterator
 from six import string_types
 
@@ -11,6 +12,26 @@ __all__ = [
     "look_up_operations",
     "damerau_levenshtein_distance",
 ]
+
+
+TRUE_VALUE = {"yes", "true", "t", "y", "1"}
+FALSE_VALUE = {"no", "false", "f", "n", "0"}
+
+
+def str2boolean(string_input: str) -> bool:
+    """
+    convert user input config string to boolean
+
+    :param string_input: any string in TRUE_VALUE or FALSE_VALUE
+    :return: True or False
+    """
+    if string_input.lower() in TRUE_VALUE:
+        return True
+    if string_input.lower() in FALSE_VALUE:
+        return False
+    raise argparse.ArgumentTypeError(
+        "Boolean value expected, received {}".format(string_input)
+    )
 
 
 def gen_batch(iterable: Mapping, batch_size: int = 1) -> Iterator[Mapping]:
