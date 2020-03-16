@@ -21,6 +21,7 @@ from tinycat import (
     thirdparty,
     evaluation,
     lut,
+    data,
     plot,
     label,
     patch,

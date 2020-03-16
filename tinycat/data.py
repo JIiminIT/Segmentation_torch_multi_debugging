@@ -1,14 +1,30 @@
-"""Tinycat custom base components"""
+"""Tinycat custom data structures and utilities"""
 
 import collections
+from typing import Mapping, Iterator
 from six import string_types
 
 
 __all__ = [
+    "gen_batch",
     "namedtuple_with_defaults",
     "look_up_operations",
     "damerau_levenshtein_distance",
 ]
+
+
+def gen_batch(iterable: Mapping, batch_size: int = 1) -> Iterator[Mapping]:
+    """Yields batches.
+    Args:
+        iterable (Mapping): sized object.
+        batch_size (int, optional): Defaults to 1.
+
+    Returns:
+        Iterator[Mapping]: batch of iterator
+    """
+    length = len(iterable)
+    for ndx in range(0, length, batch_size):
+        yield iterable[ndx : min(ndx + batch_size, length)]
 
 
 def namedtuple_with_defaults(typename, field_names, default_values=()):
@@ -36,6 +52,19 @@ def namedtuple_with_defaults(typename, field_names, default_values=()):
 
 
 def look_up_operations(type_str, supported):
+    """supported 배열 내에서 type_str이 matching하는 케이스를 조회하고
+    존재하지 않는 경우 가장 근접한 type_str을 유추하여 오류를 raise
+
+    Args:
+        type_str (str): 입력된 인자
+        supported (List): 지원하는 함수, argument 등
+
+    Raises:
+        ValueError: 잘못된 인자에 대한 오류
+
+    Returns:
+        type_str(str): 올바른 인자인 경우 반환
+    """
     assert isinstance(type_str, string_types), "unrecognised type string"
     if type_str in supported and isinstance(supported, dict):
         return supported[type_str]
@@ -71,31 +100,36 @@ def look_up_operations(type_str, supported):
         )
 
 
-def damerau_levenshtein_distance(s1, s2):
+# pylint: disable=invalid-name
+def damerau_levenshtein_distance(x, y):
     """
     Calculates an edit distance, for typo detection. Code based on :
     https://en.wikipedia.org/wiki/Damerau–Levenshtein_distance
     """
-    d = {}
-    string_1_length = len(s1)
-    string_2_length = len(s2)
-    for i in range(-1, string_1_length + 1):
-        d[(i, -1)] = i + 1
-    for j in range(-1, string_2_length + 1):
-        d[(-1, j)] = j + 1
+    distances = {}
+    x_length = len(x)
+    y_length = len(y)
 
-    for i in range(string_1_length):
-        for j in range(string_2_length):
-            if s1[i] == s2[j]:
+    for i in range(-1, x_length + 1):
+        distances[(i, -1)] = i + 1
+    for j in range(-1, y_length + 1):
+        distances[(-1, j)] = j + 1
+
+    for i in range(x_length):
+        for j in range(y_length):
+            if x[i] == y[j]:
                 cost = 0
             else:
                 cost = 1
-            d[(i, j)] = min(
-                d[(i - 1, j)] + 1,  # deletion
-                d[(i, j - 1)] + 1,  # insertion
-                d[(i - 1, j - 1)] + cost,  # substitution
+            distances[(i, j)] = min(
+                distances[(i - 1, j)] + 1,  # deletion
+                distances[(i, j - 1)] + 1,  # insertion
+                distances[(i - 1, j - 1)] + cost,  # substitution
             )
-            if i and j and s1[i] == s2[j - 1] and s1[i - 1] == s2[j]:
-                d[(i, j)] = min(d[(i, j)], d[i - 2, j - 2] + cost)  # transposition
+            if i and j and x[i] == y[j - 1] and x[i - 1] == y[j]:
+                # transposition
+                distances[(i, j)] = min(
+                    distances[(i, j)], distances[i - 2, j - 2] + cost
+                )
 
-    return d[string_1_length - 1, string_2_length - 1]
+    return distances[x_length - 1, y_length - 1]

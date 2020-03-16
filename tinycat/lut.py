@@ -1,14 +1,13 @@
 """Efficient data structures and lookup tables for internal products"""
 
 import os
-from tinycat._base import namedtuple_with_defaults as namedtuple
+from tinycat.data import namedtuple_with_defaults as namedtuple
 
 __all__ = [
     "ValueOrientedLut",
     "NameOrientedLut",
     "FREESURFER_NAME_LUT",
     "FREESURFER_VALUE_LUT",
-    "ASEG_WH_LUT",
     "ASEG_CC_LUT",
     "ASEG_SP_LUT",
     "SEGENGINE_V1_LUT",
