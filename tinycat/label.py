@@ -1,5 +1,5 @@
 """3d multilabel 영상 처리 알고리즘들을 모아 둔 모듈"""
-# pylint: disable=unsupported-assignment-operation, no-member
+# pylint: disable=unsupported-assignment-operation, no-member, bad-continuation
 from typing import List, Optional
 import numpy as np
 from scipy import ndimage
@@ -89,6 +89,21 @@ def get_largest_label(
     return clump_mask
 
 
+def detach_percentile_particles(label: np.ndarray, theta: float = 0.01) -> np.ndarray:
+    """detach certain sizes of particles from aqua segmentation results
+
+    Args:
+        label (np.ndarray): aqua 104 label segmentation results
+        theta (float): percentage of size to allow from biggest label, Defaults to 0.01
+
+    Returns:
+        np.ndarray: particle detached results
+    """
+    detached_reigon = connected_components_analysis(label, label=1, theta=theta)
+    label[(label > 0) & (detached_reigon == 0)] = 0
+    return label.astype(np.uint8)
+
+
 def gen_mask(data: np.ndarray, iteration: int = 10) -> np.ndarray:
     """morphological close with custom iterations.
 
@@ -150,8 +165,8 @@ def argmax_of_neighbor(
 def connected_components_analysis(
     data: np.ndarray,
     label: int = 1,
-    theta: float = 1,
-    sigma: float = 0.05,
+    theta: float = 0.05,
+    sigma: float = 0,
     structure: Optional[np.ndarray] = None,
 ) -> np.ndarray:
     """ detach unconnected components with thresholded size.
@@ -173,17 +188,16 @@ def connected_components_analysis(
 
     if sigma:
         image = ndimage.gaussian_filter(data, sigma=sigma)
+        thresholded = image >= image.mean()
     else:
-        image = data
+        thresholded = data
 
-    thresholded = image >= image.mean()
     connected_component, n_labels = ndimage.label(thresholded, structure=structure)
-    connected_component = (connected_component > 0) * 1
     sizes = ndimage.sum(thresholded, connected_component, range(n_labels + 1))
     mask_size = sizes < max(sizes) * theta
     remove_pixel = mask_size[connected_component]
     connected_component[remove_pixel] = 0
-    connected_component *= label
+    connected_component[connected_component > 0] = label
 
     return connected_component
 
@@ -241,7 +255,7 @@ def slicewise_fill_holes(data: np.ndarray) -> np.ndarray:
         data (np.ndarray): 3d label array
 
     Returns:
-        np.ndarray: Transformation of the input data 
+        np.ndarray: Transformation of the input data
             where holes have been filled
     """
 
@@ -421,22 +435,22 @@ class PostProcessingLayer(object):
         edited: bool = False,
         layer_gap: int = 2,
     ) -> np.array:
-        """merges 9-label segmentation result and 
+        """merges 9-label segmentation result and
         ischemic stroke segmentation result
 
         Args:
             label (np.ndarray): label array
             stroke (np.ndarray): stroke array
             edited (bool): edited label should not be processed dramatically
-            layer_gap (int): number of iterations for in_out_correction to 
+            layer_gap (int): number of iterations for in_out_correction to
                 cover internal tissues with external tissues
 
         Returns:
             result (np.ndarray): result array
 
         Procedure:
-            1. CSF 라벨의 binary closing을 통해 CSF 라벨의 안에 
-            외부 라벨 (Skull, Skin)이 포함되지 않도록 한다. 
+            1. CSF 라벨의 binary closing을 통해 CSF 라벨의 안에
+            외부 라벨 (Skull, Skin)이 포함되지 않도록 한다.
             2. 속을 채운 CSF 라벨의 바깥쪽에 존재하는 Stroke는 모두 제거된다.
             3. Stroke label 중 가장 큰 덩어리의 5% 이하 크기의 Stroke는 노이즈로 간주하고 모두 없앤다.
             4. CSF는 Stroke를 감싸도록 Stroke가 빠져나간 부분만큼 dilation된다.
