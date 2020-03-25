@@ -7,23 +7,30 @@ ASEG_FILENAME = "aparc+aseg.mgz"
 WMPARC_FILENAME = "wmparc.mgz"
 
 
-def convert_aseg_to_v1_and_save(directory="./", result_filename="converted.nii.gz"):
+def convert_aseg_to_9_v1_and_save(directory="./", result_filename="converted.nii.gz"):
     aparc_aseg = cat.load(os.path.join(directory, ASEG_FILENAME))
-    converted = convert_aseg_to_v1(aparc_aseg.get_data())
+    converted = convert_aseg_to_9_v1(aparc_aseg.get_data())
     cat.Nifti1Image(converted, aparc_aseg.affine, header=aparc_aseg.header).to_filename(
         result_filename
     )
 
 
-def convert_aseg_to_v2_and_save(directory="./", result_filename="converted.nii.gz"):
+def convert_aseg_to_9_v2_and_save(directory="./", result_filename="converted.nii.gz"):
     aparc_aseg = cat.load(os.path.join(directory, ASEG_FILENAME))
-    converted = convert_aseg_to_v2(aparc_aseg.get_data())
+    converted = convert_aseg_to_9_v2(aparc_aseg.get_data())
+    cat.Nifti1Image(converted, aparc_aseg.affine, header=aparc_aseg.header).to_filename(
+        result_filename
+    )
+
+def convert_aseg_to_104_v1_and_save(directory="./", result_filename="converted.nii.gz"):
+    aparc_aseg = cat.load(os.path.join(directory, ASEG_FILENAME))
+    converted = convert_aseg_to_104_v1(aparc_aseg.get_data())
     cat.Nifti1Image(converted, aparc_aseg.affine, header=aparc_aseg.header).to_filename(
         result_filename
     )
 
 
-def convert_aseg_to_v1(aseg):
+def convert_aseg_to_9_v1(aseg):
     """Convert aparc+aseg.mgz into 9-label segmentation labels
     
     Args:
@@ -111,7 +118,7 @@ def convert_aseg_to_v1(aseg):
     return empty_aseg
 
 
-def convert_aseg_to_v2(aseg):
+def convert_aseg_to_9_v2(aseg):
     empty_aseg = np.zeros_like(aseg)
 
     # Remove optic-chiasm
@@ -193,3 +200,18 @@ def convert_aseg_to_v2(aseg):
     empty_aseg[csf > 0] = 6
 
     return empty_aseg
+
+def convert_aseg_to_104_v1(aseg):
+    """Convert aparc+aseg.mgz into 104-label segmentation labels
+    
+    Args:
+        aseg (np.ndarray): array of aseg
+    
+    Returns:
+        np.array: converted labels
+    """
+    empty_aseg = np.zeros_like(aseg)
+    for label_target, label_source in enumerate(cat.lut.AQUA_LABEL_V2):
+        empty_aseg[aseg == label_source] = label_target
+    return empty_aseg
+
