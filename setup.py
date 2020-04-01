@@ -25,6 +25,7 @@ REQUIRED_PACKAGES = [
     "pandas",
     "click",
     "tqdm",
+    "packaging",
     "SimpleITK",
 ]
 
