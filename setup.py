@@ -25,6 +25,7 @@ REQUIRED_PACKAGES = [
     "pandas",
     "click",
     "tqdm",
+    "blinker",
     "packaging",
     "SimpleITK",
 ]
@@ -34,7 +35,7 @@ REQUIRED_PACKAGES = [
 try:
     import tensorflow as _test_
 except ImportError:
-    REQUIRED_PACKAGES.append("tensorflow")
+    REQUIRED_PACKAGES.append("tensorflow-gpu==1.15.0")
 
 
 # Retrieve version from about.py
