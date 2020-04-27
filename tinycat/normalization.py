@@ -203,7 +203,7 @@ class HistogramNormalisationLayer(object):
         normalised = self._normalise_4d(image_4d, image_mask)
         return normalised, image_mask
 
-    def train(self, image_list):
+    def train(self, image_list=[]):
         print("normalisation histogram reference models ready")
         print("training normalisation histogram references, using {} subjects".format(len(image_list)))
 
