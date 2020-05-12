@@ -3,6 +3,7 @@ import os
 
 import numpy as np
 from scipy import ndimage
+from nibabel import Nifti1Image
 
 import tinycat as cat
 import tinycat.histogram_standardisation as hs
@@ -189,12 +190,15 @@ class HistogramNormalisationLayer(object):
         return np.array(image_list)
 
     def layer_op(self, image, mask=None):
-        image_4d = np.asarray(np.expand_dims(image.get_data(), axis=-1), dtype=np.float32)
+        if isinstance(image, Nifti1Image):
+            image = image.get_data()
+
+        image_4d = np.asarray(np.expand_dims(image, axis=-1), dtype=np.float32)
 
         if mask is not None:
             image_mask = mask
         elif self.binary_masking_func is not None:
-            image_mask = self.binary_masking_func.layer_op(image.get_data())
+            image_mask = self.binary_masking_func.layer_op(image)
             image_mask = np.expand_dims(image_mask, axis=-1)
         else:
             # no access to mask, default to all image
