@@ -5,8 +5,7 @@ from glob import glob
 
 import numpy as np
 import nibabel as nib
-from tinycat.lut import AQUA_LABEL_V2
-
+from tinycat.lut import AQUA_LABEL_V1, LEFT_LABELS
 
 def convert_aseg_to_label(root_dir, mode="aqua"):
     """Converts aseg.mgz to predefined label format
@@ -52,7 +51,7 @@ def convert_aseg_to_label(root_dir, mode="aqua"):
         output_label = np.zeros_like(aseg)
 
         if mode == "aqua":
-            for idx, label in enumerate(AQUA_LABEL_V2):
+            for idx, label in enumerate(AQUA_LABEL_V1):
                 output_label[aseg == label] = idx
 
         if mode == "teslab":
