@@ -1,10 +1,12 @@
 import os
 import warnings
-from glob import glob
 from argparse import ArgumentParser
 from datetime import datetime
-from tqdm import tqdm
+from glob import glob
+
 import pandas as pd
+from tqdm import tqdm
+
 import tinycat as cat
 from tinycat.evaluation import report_metrics
 
@@ -70,6 +72,11 @@ class Evaluator(object):
         parser = self._parse()
         self.args, _ = parser.parse_known_args()
 
+        # label_directory = r'D:\Neurophet_work\Dataset\seg_104_eval_data\seg_aqua'
+        # prediction_directory = r'D:\Neurophet_work\Result\seg_layer_104\pytorch_version\output'
+        # label_subfix = '*_Label_v2.nii.gz'
+        # prediction_subfix = '*_output_98.nii.gz'
+
         self.label_filenames = sorted(
             glob(os.path.join(self.args.label_directory, self.args.label_subfix))
         )
@@ -81,10 +88,53 @@ class Evaluator(object):
             )
         )
 
-        if len(self.label_filenames) != len(self.prediction_filenames):
+        # self.label_filenames = sorted(
+        #     glob(os.path.join(label_directory, label_subfix))
+        # )
+        # self.prediction_filenames = sorted(
+        #     glob(
+        #         os.path.join(
+        #             prediction_directory, prediction_subfix
+        #         )
+        #     )
+        # )
+
+        matched_label_paths = []
+        matched_pred_paths = []
+        for label_path in self.label_filenames:
+            for pred_path in self.prediction_filenames:
+                label_sub_path = os.path.basename(label_path).replace(
+                    self.args.label_subfix.replace('*_', ''), '')
+                pred_sub_path = os.path.basename(pred_path).replace(
+                    self.args.prediction_subfix.replace('*_', ''), '')
+
+                if label_sub_path == pred_sub_path:
+                    matched_label_paths.append(label_path)
+                    matched_pred_paths.append(pred_path)
+                    break
+
+        # matched_label_paths = []
+        # matched_pred_paths = []
+        # for label_path in self.label_filenames:
+        #     for pred_path in self.prediction_filenames:
+        #         label_sub_path = os.path.basename(label_path).replace(
+        #             label_subfix.replace('*_', ''), '')
+        #         pred_sub_path = os.path.basename(pred_path).replace(
+        #             prediction_subfix.replace('*_', ''), '')
+        #
+        #         if label_sub_path == pred_sub_path:
+        #             matched_label_paths.append(label_path)
+        #             matched_pred_paths.append(pred_path)
+        #             break
+
+        if len(matched_label_paths) != len(matched_pred_paths):
             warnings.warn(
                 "number of label files and prediction files are not identical."
             )
+        else:
+            print(f'matched filename number : {len(matched_label_paths)} / {len(self.label_filenames)}')
+            self.label_filenames = matched_label_paths
+            self.prediction_filenames = matched_pred_paths
 
     @staticmethod
     def positional_intersection(string1, string2):
