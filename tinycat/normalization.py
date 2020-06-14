@@ -2,8 +2,8 @@
 import os
 
 import numpy as np
-from scipy import ndimage
 from nibabel import Nifti1Image
+from scipy import ndimage
 
 import tinycat as cat
 import tinycat.histogram_standardisation as hs
@@ -183,9 +183,9 @@ class HistogramNormalisationLayer(object):
         image_list = []
 
         for file in dir_list:
-            if self.modality in file:
-                img_nii = cat.load(os.path.join(self.data_path, file))
-                image_list.append(img_nii)
+            # if self.modality in file:
+            img_nii = cat.load(os.path.join(self.data_path, file))
+            image_list.append(img_nii)
 
         return np.array(image_list)
 

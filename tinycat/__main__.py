@@ -22,24 +22,26 @@ def main():
 
         subprocess.call(cmd, shell=True)
 
-    # data_path = 'X:/CMCYD/PT_data/PT_data_nii_200319/sub_0001_0_FLAIR.nii.gz'
-    # histogram_ref_file = "histogram_ref_model.txt"
+    # data_path = r'D:\Neurophet_work\SourceCode\Registration\inference_data\hist_train'
+    # # histogram_ref_file = r'D:\Neurophet_work\SourceCode\Registration\histogram_mni_model.txt'
     #
     # histogram_normaliser = cat.normalization.HistogramNormalisationLayer(
     #     data_path=data_path,
-    #     modality='FLAIR',
-    #     model_filename=histogram_ref_file,
+    #     modality='T1',
+    #     model_filename=None,
     #     binary_masking_func=cat.binary_masking.BinaryMaskingLayer(),
     #     norm_type='percentile',
     #     cutoff=(0.01, 0.99),
     # )
     #
-    # # image_list = histogram_normaliser.image_list_from_path()
-    # # histogram_normaliser.train(image_list)
+    # image_list = histogram_normaliser.image_list_from_path()
+    # histogram_normaliser.train(image_list=image_list)
     #
-    # img = cat.load(data_path)
-    # histogram_normaliser.train()
+    # img = cat.load(r'D:\Neurophet_work\Dataset\seg_104_eval_data\seg_aqua\1155642_T1.nii.gz')
+    # # histogram_normaliser.train()
     # norm_image, mask = histogram_normaliser.layer_op(img)
+    #
+    # import matplotlib.pyplot as plt
     #
     # img = img.get_data()
     # plt.subplot(1, 3, 1)
