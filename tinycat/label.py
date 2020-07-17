@@ -1,10 +1,10 @@
 """3d multilabel 영상 처리 알고리즘들을 모아 둔 모듈"""
 # pylint: disable=unsupported-assignment-operation, no-member, bad-continuation
 from typing import List, Optional
+
 import numpy as np
 from scipy import ndimage
 from scipy.ndimage.morphology import binary_dilation, binary_closing, binary_fill_holes
-
 
 __all__ = [
     "fill_and_clean_label",
@@ -669,7 +669,7 @@ class PostProcessingLayer(object):
         csf = get_largest_label(csf)
 
         # Cover inner region with outter region
-        csf = in_out_correction(csf, brain, iterations=layer_gap)
+        # csf = in_out_correction(csf, brain, iterations=layer_gap)
 
         # Start Assembling all Brain, Skull and Skin
         csf_brain = np.where(brain > 0, brain, csf * 6)
