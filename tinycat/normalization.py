@@ -209,12 +209,12 @@ class HistogramNormalisationLayer(object):
 
     def train(self, image_list=[]):
         print("normalisation histogram reference models ready")
-        print("training normalisation histogram references, using {} subjects".format(len(image_list)))
 
         if self.model_file is not None:
             all_maps = hs.read_mapping_file(self.model_file)
             self.mapping = all_maps[self.modality]
         else:
+            print("training normalisation histogram references, using {} subjects".format(len(image_list)))
             trained_mapping = hs.create_mapping_from_multimod_arrayfiles(
                 image_list,
                 self.cutoff,
