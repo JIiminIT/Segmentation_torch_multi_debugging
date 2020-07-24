@@ -1,11 +1,13 @@
+import argparse
 import os
 import time
-import argparse
 from glob import glob
 
-import numpy as np
 import nibabel as nib
-from tinycat.lut import AQUA_LABEL_V1, LEFT_LABELS_v1
+import numpy as np
+
+from tinycat.lut import AQUA_LABEL_V1
+
 
 def convert_aseg_to_label(root_dir, mode="aqua"):
     """Converts aseg.mgz to predefined label format

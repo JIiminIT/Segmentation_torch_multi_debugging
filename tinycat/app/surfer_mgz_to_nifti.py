@@ -1,8 +1,10 @@
+import argparse
 import os
 import time
-import argparse
 from glob import glob
+
 import nibabel as nib
+
 
 def convert_surfer_mgz_to_nifti(root_dir):
     """

@@ -3,13 +3,13 @@
 run:
     > python setup.py install
 """
+import io
 # Copyright 2020 Neurophet Inc. All Rights Reserved.
 # Author: Daun Jung (iam@nyanye.com / djjung@neurophet.com)
 import os
-import io
+
 from setuptools import find_packages
 from setuptools import setup
-
 
 # 2020-03-12 comment:
 # Aqua Engine 1.3.0 및 SegEngine 2.1.7 버젼에서 배포되고 있는 dependency들의 버젼:
@@ -30,12 +30,13 @@ REQUIRED_PACKAGES = [
     "SimpleITK",
 ]
 
+
 # tensorflow-gpu 패키지가 설치되어 있는 경우 그대로 사용
 # pylint: disable=unused-import
-try:
-    import tensorflow as _test_
-except ImportError:
-    REQUIRED_PACKAGES.append("tensorflow-gpu==1.14.0")
+# try:
+#     import tensorflow as _test_
+# except ImportError:
+#     REQUIRED_PACKAGES.append("tensorflow-gpu==1.14.0")
 
 
 # Retrieve version from about.py
